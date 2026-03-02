@@ -70,7 +70,11 @@ bool sb_append_len(StringBuffer *sb, const char *text, size_t text_len) {
 
 // Append a null-terminated string to a StringBuffer
 bool sb_append(StringBuffer *sb, const char *text) {
-    return sb_append_len(sb, text, strlen(text));
+     if ( text == NULL ) {
+        return false;
+        printf("Warning: sb_appen(), null ptr passed \n");
+     }  
+     return sb_append_len(sb, text, strlen(text));
 }
 
 // Append a string with JSON escaping to a StringBuffer

@@ -49,8 +49,7 @@ void test_integer_overflow_protection() {
     printf("  Exceed max capacity: %s\n", exceed_result ? "FAIL" : "PASS");
     assert(exceed_result == false); // Should fail
     
-    sb_free(&sb);
-    sb_free(&sb2);
+    // No sb_free needed - both sb and sb2 are on the stack
     printf("  Integer overflow protection: PASS\n\n");
 }
 
@@ -84,7 +83,7 @@ void test_maximum_capacity_enforcement() {
         printf("  Max capacity %zu bytes: %s\n", max_size, exceed_result ? "FAIL" : "PASS");
         assert(exceed_result == false);
         
-        sb_free(&sb);
+        // No sb_free needed - sb is on the stack
     }
     printf("  Maximum capacity enforcement: PASS\n\n");
 }
@@ -103,14 +102,16 @@ void test_null_pointer_handling() {
     printf("  sb_append(NULL): %s\n", append_result ? "FAIL" : "PASS");
     assert(append_result == false);
     
-    // Test sb_append with null text
+    // Test sb_append with null text - should return false gracefully
     StringBuffer sb;
     sb_init(&sb, 1024);
+    
+    printf(" calling append with NULL text\n");
     bool null_text_result = sb_append(&sb, NULL);
     printf("  sb_append(NULL text): %s\n", null_text_result ? "FAIL" : "PASS");
     assert(null_text_result == false);
     
-    sb_free(&sb);
+    // No sb_free needed - sb is on the stack
     printf("  Null pointer handling: PASS\n\n");
 }
 
@@ -124,7 +125,7 @@ void test_edge_cases() {
     printf("  Zero initial capacity: %s\n", result ? "PASS" : "FAIL");
     assert(result == true);
     assert(sb1.capacity >= 64); // Minimum size
-    sb_free(&sb1);
+    // No sb_free needed - sb1 is on the stack
     
     // Test empty string handling
     StringBuffer sb2;
@@ -133,7 +134,7 @@ void test_edge_cases() {
     printf("  Empty string append: %s\n", empty_result ? "PASS" : "FAIL");
     assert(empty_result == true);
     assert(sb2.len == 0);
-    sb_free(&sb2);
+    // No sb_free needed - sb2 is on the stack
     
     // Test very long string
     StringBuffer sb3;
@@ -146,7 +147,7 @@ void test_edge_cases() {
     printf("  Long string append: %s\n", long_result ? "PASS" : "FAIL");
     assert(long_result == true);
     assert(sb3.len == sizeof(long_buffer) - 1);
-    sb_free(&sb3);
+    // No sb_free needed - sb3 is on the stack
     
     printf("  Edge cases: PASS\n\n");
 }
@@ -178,7 +179,7 @@ void test_memory_safety() {
     assert(sb.len == strlen(sb.str));
     printf("  Length accuracy: PASS\n");
     
-    sb_free(&sb);
+    // No sb_free needed - sb is on the stack
     printf("  Memory safety: PASS\n\n");
 }
 
