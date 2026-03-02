@@ -30,10 +30,13 @@ typedef struct {
     Message *msg_head;
     Message *msg_tail;
     int message_count;
+    size_t max_message_size;    // Maximum size for individual messages (0 = unlimited)
+    size_t max_total_size;      // Maximum total buffer size (0 = unlimited)
 } ChunkedBufferContext;
 
 // Function declarations
 ChunkedBufferContext* cb_init();
+ChunkedBufferContext* cb_init_with_limits(size_t max_message_size, size_t max_total_size);
 bool cb_add_message(ChunkedBufferContext *ctx, const char *content);
 size_t cb_get_message_text(ChunkedBufferContext *ctx, Message *msg, char *dest, size_t dest_size);
 void cb_free(ChunkedBufferContext *ctx);

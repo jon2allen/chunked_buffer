@@ -4,7 +4,17 @@
 
 // Initialize a new chunked buffer context
 ChunkedBufferContext* cb_init() {
-    return calloc(1, sizeof(ChunkedBufferContext));
+    return cb_init_with_limits(0, 0); // 0 = unlimited
+}
+
+// Initialize a new chunked buffer context with size limits
+ChunkedBufferContext* cb_init_with_limits(size_t max_message_size, size_t max_total_size) {
+    ChunkedBufferContext *ctx = calloc(1, sizeof(ChunkedBufferContext));
+    if (ctx) {
+        ctx->max_message_size = max_message_size;
+        ctx->max_total_size = max_total_size;
+    }
+    return ctx;
 }
 
 // Add a message to the chunked buffer
@@ -13,6 +23,14 @@ bool cb_add_message(ChunkedBufferContext *ctx, const char *content) {
 
     size_t len = strlen(content);
     if (len == 0) return true; // Empty message
+
+    // Apply size limits
+    if (ctx->max_message_size > 0 && len > ctx->max_message_size) {
+        return false; // Message too large
+    }
+    if (ctx->max_total_size > 0 && ctx->total_bytes + len > ctx->max_total_size) {
+        return false; // Would exceed total size limit
+    }
 
     Message *msg = calloc(1, sizeof(Message));
     if (!msg) return false;

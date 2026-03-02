@@ -9,10 +9,12 @@ typedef struct {
     char *str;       // Pointer to the dynamically allocated string
     size_t len;      // Current length of the string
     size_t capacity; // Total allocated capacity
+    size_t max_capacity; // Maximum allowed capacity (0 = unlimited)
 } StringBuffer;
 
 // Function declarations
 bool sb_init(StringBuffer *sb, size_t initial_cap);
+bool sb_init_with_limits(StringBuffer *sb, size_t initial_cap, size_t max_capacity);
 bool sb_append_len(StringBuffer *sb, const char *text, size_t text_len);
 bool sb_append(StringBuffer *sb, const char *text);
 void sb_append_escaped_json(StringBuffer *sb, const char *text, size_t len);

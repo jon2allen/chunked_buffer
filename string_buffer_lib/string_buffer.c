@@ -6,10 +6,19 @@
 
 // Initialize a StringBuffer with an initial capacity
 bool sb_init(StringBuffer *sb, size_t initial_cap) {
+    return sb_init_with_limits(sb, initial_cap, 0); // 0 = unlimited
+}
+
+// Initialize a StringBuffer with an initial capacity and maximum size limit
+bool sb_init_with_limits(StringBuffer *sb, size_t initial_cap, size_t max_capacity) {
     if (!sb) return false;
+    if (initial_cap == 0) initial_cap = 64; // Minimum reasonable size
+    
     sb->str = malloc(initial_cap);
     if (!sb->str) return false;
+    
     sb->capacity = initial_cap;
+    sb->max_capacity = max_capacity;
     sb->len = 0;
     sb->str[0] = '\0';
     return true;
@@ -18,14 +27,41 @@ bool sb_init(StringBuffer *sb, size_t initial_cap) {
 // Append text with a specified length to a StringBuffer
 bool sb_append_len(StringBuffer *sb, const char *text, size_t text_len) {
     if (!sb || !text) return false;
+    
+    // Check for integer overflow in capacity calculation
+    // If sb->capacity + text_len would overflow when multiplied by 2
+    if (text_len > 0 && sb->capacity > SIZE_MAX / 2) {
+        // Capacity is already large, simple addition check
+        if (text_len > SIZE_MAX - sb->capacity) {
+            return false; // Would overflow
+        }
+    } else if (text_len > SIZE_MAX / 2 - sb->capacity) {
+        return false; // Would overflow in (capacity + text_len) * 2
+    }
+    
+    // Check if we need to resize
     if (sb->len + text_len + 1 > sb->capacity) {
         size_t new_cap = (sb->capacity + text_len) * 2;
-        if (new_cap < sb->capacity) return false; // Overflow check
+        
+        // Apply maximum capacity limit if set
+        if (sb->max_capacity > 0 && new_cap > sb->max_capacity) {
+            new_cap = sb->max_capacity;
+        }
+        
+        // Final overflow check
+        if (new_cap < sb->capacity) return false;
+        
         char *new_str = realloc(sb->str, new_cap);
         if (!new_str) return false;
         sb->str = new_str;
         sb->capacity = new_cap;
     }
+    
+    // Check maximum capacity after resize
+    if (sb->max_capacity > 0 && sb->len + text_len > sb->max_capacity) {
+        return false; // Would exceed maximum capacity
+    }
+    
     memcpy(sb->str + sb->len, text, text_len);
     sb->len += text_len;
     sb->str[sb->len] = '\0';
