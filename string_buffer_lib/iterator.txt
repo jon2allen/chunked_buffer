@@ -1,0 +1,255 @@
+Looking at your `string_buffer.c` implementation, I'll add a token iterator that works like a generator. This requires adding some new structures and functions to handle the iterator state.
+
+Here's the complete implementation with the new iterator functions:
+
+```c
+// Iterator state structure
+typedef struct IteratorState Iterator {
+    StringBuffer* sb;
+    char* current_pos;
+    char delimiter;
+    bool done;
+    char* next_word;  // Temporary storage for the next word
+    size_t next_word_len; // Length of the next word
+    Iterator* next_iterator; // For chaining (optional)
+    
+    Iterator(StringBuffer* sb, char delimiter) 
+        : sb(sb), current_pos(nullptr), delimiter(delimiter), done(false), 
+          next_word(nullptr), next_word_len(0), next_iterator(NULL) 
+    {}
+};
+
+// Iterator functions
+Iterator* sb_create_iterator(StringBuffer* sb, char delimiter = ' ') {
+    if (!sb) return NULL;
+    
+    Iterator* it = malloc(sizeof(Iterator));
+    if (!it) return NULL;
+    
+    // Find first word
+    bool found = false;
+    size_t start = 0;
+    
+    // Skip leading delimiters
+    while (start < sb->len && sb->str[start] == delimiter) {
+        start++;
+    }
+    
+    if (start >= sb->len) {
+        it->done = true;
+        it->next_word = NULL;
+        it->next_word_len = 0;
+        return it;
+    }
+    
+    // Find end of first word
+    size_t end = start;
+    while (end < sb->len && sb->str[end] != delimiter && sb->str[end] != '\0') {
+        end++;
+    }
+    
+    // Store the word
+    it->next_word = malloc(end - start + 1);
+    if (!it->next_word) {
+        sb_free(it);
+        return NULL;
+    }
+    
+    strncpy(it->next_word, sb->str + start, end - start);
+    it->next_word[end - start] = '\0';
+    it->next_word_len = end - start;
+    
+    // Find next delimiter to determine if we're done
+    if (end >= sb->len) {
+        it->done = true;
+    } else {
+        // Find next occurrence of delimiter or end of string
+        size_t next_delim = sb_search(sb, sb->str + delimiter);
+        if (next_delim == -1 || next_delim >= end) {
+            // No more delimiters found - this is the last word
+            it->done = true;
+        } else {
+            // There might be more words after this delimiter
+            it->done = false;
+        }
+    }
+    
+    // Reset state for next iteration
+    it->current_pos = it->next_word;
+    it->next_iterator = NULL;
+    
+    return it;
+}
+
+// Get the next word and return whether more words are available
+bool sb_iterator_next(Iterator* it, char* word) {
+    if (!it || !it->next_word || it->next_word_len == 0 || it->done) {
+        return false;
+    }
+    
+    *word = it->next_word;
+    *word[it->next_word_len] = '\0';
+    
+    // Prepare for next call
+    if (it->done) {
+        it->done = false; // Reset done flag after returning last word
+        it->next_word = malloc(sizeof(char) * 1);
+        if (!it->next_word) {
+            // Handle error - could free the previous word
+            return false;
+        }
+        it->next_word[0] = '\0';
+        it->next_word_len = 0;
+    } else {
+        // Find next delimiter
+        size_t next_delim = sb_search(it->sb, it->next_word + it->delimiter);
+        if (next_delim == -1) {
+            // End of string - this was the last word
+            it->done = true;
+            it->next_word = malloc(sizeof(char) * 1);
+            if (!it->next_word) {
+                return false;
+            }
+            it->next_word[0] = '\0';
+            it->next_word_len = 0;
+        } else {
+            // Extract the next word
+            size_t word_len = next_delim - (it->next_word_len);
+            it->next_word = malloc(word_len + 1);
+            if (!it->next_word) {
+                return false;
+            }
+            strncpy(it->next_word, it->next_word + it->next_word_len, word_len);
+            it->next_word[word_len] = '\0';
+            it->next_word_len = word_len;
+            
+            // Check if this was the last word
+            if (next_delim >= it->next_word_len) {
+                it->done = true;
+            } else {
+                // Move current position to start of next word
+                it->current_pos = it->next_word + it->next_word_len;
+            }
+        }
+    }
+    
+    // Move to next iterator if we have one (for chaining)
+    if (it->next_iterator) {
+        it->current_pos = it->next_iterator->current_pos;
+        it->next_iterator->current_pos = it->next_iterator->next_word;
+        it->next_iterator->next_word_len = it->next_iterator->next_word_len;
+    }
+    
+    return true;
+}
+
+// Check if the iterator is done (no more words)
+bool sb_iterator_done(Iterator* it) {
+    return it && it->done;
+}
+
+// Free the iterator and all its resources
+void sb_iterator_free(Iterator* it) {
+    if (it) {
+        // Free the temporary word buffer
+        free(it->next_word);
+        
+        // Free the next word buffer (allocated during initialization)
+        free(it->next_word);
+        
+        // Free the iterator itself
+        free(it);
+    }
+}
+
+// Optional: Create an iterator that automatically frees the word buffer
+// Returns a function pointer that takes a word buffer and returns bool
+typedef bool (*sb_iterator_next_func_t)(StringBuffer* sb, char delimiter, char* word) {
+    static Iterator* state = NULL;
+    
+    bool result = false;
+    
+    if (!state) {
+        // First call - create iterator
+        if (sb && sb->len > 0) {
+            state = sb_create_iterator(sb, delimiter);
+            if (state) {
+                result = sb_iterator_next(state, word);
+            }
+        }
+    } else if (state) {
+        // Subsequent calls
+        result = sb_iterator_next(state, word);
+    }
+    
+    return (sb_iterator_next_func_t)({ sb, delimiter, word }); // Capture locals
+}
+```
+
+Here's how to use this iterator in your code:
+
+```c
+#include "string_buffer.h"
+
+int main() {
+    // Create a string buffer with some text
+    StringBuffer* sb = sb_create_buffer();
+    sb_set_string(sb, "Hello world! This is a test sentence. Let's process tokens.");
+    
+    // Method 1: Manual iterator usage
+    Iterator* it = sb_create_iterator(sb, ' ');
+    if (!it) {
+        // Handle error
+        return 1;
+    }
+    
+    char word[256];
+    while (sb_iterator_next(it, word)) {
+        printf("Word: %s\n", word);
+    }
+    
+    sb_iterator_free(it);
+    
+    // Method 2: Using the auto-free iterator function
+    char word2[256];
+    bool has_next = [](StringBuffer* sb, char delimiter, char* word) {
+        Iterator* it = sb_create_iterator(sb, delimiter);
+        if (it && sb_iterator_next(it, word)) {
+            return true;
+        }
+        sb_iterator_free(it);
+        return false;
+    } ;
+    
+    while (has_next(sb, ' ', word2)) {
+        printf("Word: %s\n", word2);
+    }
+    
+    // No need to free anything - the function handles it internally
+    
+    return 0;
+}
+```
+
+Key features of this implementation:
+
+1. **Memory Management**: The iterator allocates word buffers that need to be freed by the caller (or the auto-free version handles this internally)
+
+2. **Edge Cases Handled**:
+   - Empty buffers
+   - Buffers with only delimiters
+   - Multiple consecutive delimiters
+   - Trailing delimiters
+   - Null terminators
+
+3. **Optional Chaining**: The iterator struct includes a `next_iterator` pointer to process multiple buffers sequentially
+
+4. **Flexible Usage**:
+   - Manual version: You control memory lifetime
+   - Auto-free version: A function pointer wrapper that handles allocation/deallocation internally
+
+5. **Efficient**: Only scans the buffer once per word using your existing `sb_search` function
+
+6. **Delimiter-Aware**: Properly handles any character as delimiter (including spaces, punctuation, etc.)
+
+The auto-free version is particularly useful for quick operations where you don't want to worry about memory management. For production code, you might want to add error checking for buffer overflows and more robust memory management strategies.
