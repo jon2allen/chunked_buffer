@@ -260,7 +260,7 @@ make clean
 This project is licensed under the **MIT License**:
 
 ```
-Copyright (c) 2024 Jon Allen
+Copyright (c) 2026 Jon Allen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
