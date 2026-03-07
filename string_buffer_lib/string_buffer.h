@@ -11,6 +11,12 @@ typedef struct {
     size_t capacity; // Total allocated capacity
 } StringBuffer;
 
+typedef struct {
+    const StringBuffer *source; // Pointer to the source StringBuffer
+    size_t current_pos;         // Current reading offset
+    char delimiter;             // The character used to split tokens (e.g., ' ')
+} SB_Iterator;
+
 // Function declarations
 bool sb_init(StringBuffer *sb, size_t initial_cap);
 bool sb_append_len(StringBuffer *sb, const char *text, size_t text_len);
@@ -28,6 +34,10 @@ bool sb_substr_c(const StringBuffer *sb, char *dest, size_t dest_size, size_t st
 // Utility to convert C string to StringBuffer
 bool sb_from_cstr(StringBuffer *sb, const char *cstr);
 bool sb_from_mem(StringBuffer *sb, const char *mem, size_t length);
+
+// Iterator functions
+void sb_iterator_init(SB_Iterator *it, const StringBuffer *sb, char delimiter);
+bool sb_iterator_next(SB_Iterator *it, StringBuffer *dest);
 
 #endif // STRING_BUFFER_H
 

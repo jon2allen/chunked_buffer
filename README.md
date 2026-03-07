@@ -4,7 +4,7 @@
 
 A pair of high-performance C libraries for text processing and memory management, featuring seamless integration between flexible string buffers and efficient chunked memory storage.
 
-## 📋 Overview
+## Overview
 
 This repository contains two complementary C libraries designed for efficient text processing:
 
@@ -13,7 +13,7 @@ This repository contains two complementary C libraries designed for efficient te
 
 Both libraries are optimized for performance and demonstrate excellent integration capabilities.
 
-## 🚀 Performance Highlights
+## Performance Highlights
 
 Performance tested with Shakespeare's Sonnets (99,944 bytes, 2,615 lines):
 
@@ -30,7 +30,7 @@ Performance tested with Shakespeare's Sonnets (99,944 bytes, 2,615 lines):
 - Consistent search performance across configurations
 - Memory-efficient storage with ChunkedBuffer integration
 
-## 📦 Libraries
+## Libraries
 
 ### StringBuffer
 
@@ -59,6 +59,16 @@ bool sb_replace(StringBuffer *sb, const char *search, const char *replace);
 bool sb_substr(const StringBuffer *sb, StringBuffer *dest, size_t start, size_t length);
 bool sb_from_cstr(StringBuffer *sb, const char *cstr);
 bool sb_from_mem(StringBuffer *sb, const char *mem, size_t length);
+
+// Iterator functions
+typedef struct {
+    const StringBuffer *source;
+    size_t current_pos;
+    char delimiter;
+} SB_Iterator;
+
+void sb_iterator_init(SB_Iterator *it, const StringBuffer *sb, char delimiter);
+bool sb_iterator_next(SB_Iterator *it, StringBuffer *dest);
 ```
 
 #### Usage Example
@@ -75,6 +85,30 @@ printf("String: %s\n", sb.str);  // Output: Hello, World!
 printf("Length: %zu\n", sb.len); // Output: 12
 
 sb_free(&sb);
+```
+
+#### Iteration Example
+
+The library includes a built-in generator-like iterator for tokenizing strings efficiently without allocating new buffers for each token.
+
+```c
+#include "string_buffer_lib/string_buffer.h"
+
+StringBuffer source;
+sb_from_cstr(&source, "C libraries for text processing");
+
+SB_Iterator it;
+sb_iterator_init(&it, &source, ' '); // Split by space
+
+StringBuffer word;
+sb_init(&word, 32);
+
+while (sb_iterator_next(&it, &word)) {
+    printf("Word: %s\n", word.str);
+}
+
+sb_free(&source);
+sb_free(&word);
 ```
 
 ### ChunkedBuffer
@@ -129,7 +163,7 @@ printf("Total bytes: %zu\n", ctx->total_bytes);   // Output: 28
 cb_free(ctx);
 ```
 
-## 🔧 Integration Example
+## Integration Example
 
 The libraries work seamlessly together for complex text processing tasks:
 
@@ -165,7 +199,7 @@ int main() {
 }
 ```
 
-## 📊 Performance Analysis
+## Performance Analysis
 
 ### Optimal Configuration Recommendations
 
@@ -200,7 +234,7 @@ Tested search performance across different word frequencies:
 
 **Performance Insight**: Even with 186 matches, search completes in under 0.2ms, demonstrating excellent scalability.
 
-## 🏗️ Building and Testing
+## Building and Testing
 
 ### Prerequisites
 
@@ -223,6 +257,7 @@ make test2      # StringBuffer tests
 make integration # Integration test
 make sonnet     # Shakespeare sonnets search
 make perf       # Performance test
+make iter       # Iterator functionality test
 
 # Clean build artifacts
 make clean
@@ -235,8 +270,9 @@ make clean
 3. **integration_test**: Demonstrates library interoperability
 4. **sonnet_search**: Real-world example searching Shakespeare's sonnets
 5. **performance_test**: Benchmarking with different configurations
+6. **iter_test**: StringBuffer iterator and tokenization validation
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 .
@@ -255,12 +291,12 @@ make clean
 └── PERFORMANCE_REPORT.md    # Detailed performance analysis
 ```
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**:
 
 ```
-Copyright (c) 2024 Jon Allen
+Copyright (c) 2026 Jon Allen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -281,27 +317,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## 🎯 Use Cases
-
-These libraries are ideal for:
-
-- **Text Processing Applications**: Log analysis, file parsing, text transformation
-- **Data Pipeline Components**: Efficient data buffering and chunking
-- **Embedded Systems**: Memory-efficient string and data handling
-- **Real-time Systems**: Predictable performance with low latency
-- **Education**: Clean examples of C memory management patterns
-
-## 🔮 Future Enhancements
-
-Potential improvements identified during development:
-
-1. **Bulk Loading Optimization**: Direct file-to-buffer memory mapping
-2. **Advanced Search**: Regex support, Boyer-Moore algorithm
-3. **Memory Pooling**: Pre-allocated memory pools for frequent operations
-4. **Thread Safety**: Concurrent access support
-5. **Serialization**: Binary serialization/deserialization
-
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these guidelines:
 
@@ -311,7 +327,7 @@ Contributions are welcome! Please follow these guidelines:
 4. Preserve backward compatibility
 5. Consider performance implications
 
-## 📬 Contact
+## Contact
 
 For questions, suggestions, or issues, please open a GitHub issue.
 
@@ -319,6 +335,6 @@ For questions, suggestions, or issues, please open a GitHub issue.
 
 *"The libraries are production-ready and have been thoroughly tested with real-world data. The performance characteristics make them suitable for both resource-constrained environments and high-performance applications."*
 
-**Last Updated**: Feb 2026 
-**Version**: 1.0
+**Last Updated**: March 2026 
+**Version**: 1.1
 **Author**: Jon Allen

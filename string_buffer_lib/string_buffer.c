@@ -90,8 +90,8 @@ size_t sb_search(const StringBuffer *sb, const char *substring) {
 bool sb_replace(StringBuffer *sb, const char *search, const char *replace) {
     if (!sb || !search || !replace) return false;
 
-    ssize_t pos = sb_search(sb, search);
-    if (pos == -1) return false; // Not found
+    size_t pos = sb_search(sb, search);
+    if (pos == (size_t)-1) return false; // Not found
 
     size_t search_len = strlen(search);
     size_t replace_len = strlen(replace);
@@ -222,3 +222,44 @@ bool sb_from_mem(StringBuffer *sb, const char *mem, size_t length) {
     return true;
 }
 
+
+// iterator init - takes a iterator struct, buffer and delim
+//
+
+void sb_iterator_init(SB_Iterator *it, const StringBuffer *sb, char delimiter) {
+    it->source = sb;
+    it->current_pos = 0;
+    it->delimiter = delimiter;
+}
+
+ //Yields the next "word" into the provided dest StringBuffer.
+ // Returns true if a word was found, false if at the end of the buffer.
+
+bool sb_iterator_next(SB_Iterator *it, StringBuffer *dest) {
+    if (!it || !it->source || it->current_pos >= it->source->len) {
+        return false;
+    }
+
+    // 1. Skip leading delimiters
+    while (it->current_pos < it->source->len && 
+           it->source->str[it->current_pos] == it->delimiter) {
+        it->current_pos++;
+    }
+
+    // 2. Check if we hit the end after skipping
+    if (it->current_pos >= it->source->len) {
+        return false;
+    }
+
+    // 3. Find the end of the current word
+    size_t start = it->current_pos;
+    while (it->current_pos < it->source->len && 
+           it->source->str[it->current_pos] != it->delimiter) {
+        it->current_pos++;
+    }
+
+    size_t length = it->current_pos - start;
+
+    // 4. Use the  sb_substr to return the word as a StringBuffer
+    return sb_substr(it->source, dest, start, length);
+}

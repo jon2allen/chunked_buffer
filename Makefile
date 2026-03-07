@@ -1,5 +1,5 @@
 # Compiler settings
-CC = clang
+CC = gcc
 CFLAGS = -Wall -Wextra -Werror -std=c11 -g -I.
 LDFLAGS = 
 
@@ -15,6 +15,7 @@ TEST2_SRC = test2_sb.c
 INTEGRATION_SRC = integration_test.c
 SONNET_SRC = sonnet_search.c
 PERF_SRC = performance_test.c
+ITER_SRC = iter_test.c
 
 # Object files
 CHUNKED_OBJ = $(CHUNKED_BUFFER_DIR)/chunked_buffer.o
@@ -24,6 +25,7 @@ TEST2_OBJ = test2_sb.o
 INTEGRATION_OBJ = integration_test.o
 SONNET_OBJ = sonnet_search.o
 PERF_OBJ = performance_test.o
+ITER_OBJ = iter_test.o
 
 # Executables
 TEST1_EXEC = test_chunked_buffer
@@ -31,9 +33,10 @@ TEST2_EXEC = test_string_buffer
 INTEGRATION_EXEC = integration_test
 SONNET_EXEC = sonnet_search
 PERF_EXEC = performance_test
+ITER_EXEC = iter_test
 
 # Default target - build all tests
-all: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC)
+all: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC)
 
 # Build chunked_buffer.o
 $(CHUNKED_OBJ): $(CHUNKED_SRC) $(CHUNKED_BUFFER_DIR)/chunked_buffer.h
@@ -63,6 +66,10 @@ $(SONNET_OBJ): $(SONNET_SRC) $(STRING_BUFFER_DIR)/string_buffer.h $(CHUNKED_BUFF
 $(PERF_OBJ): $(PERF_SRC) $(STRING_BUFFER_DIR)/string_buffer.h $(CHUNKED_BUFFER_DIR)/chunked_buffer.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Build iter_test.o
+$(ITER_OBJ): $(ITER_SRC) $(STRING_BUFFER_DIR)/string_buffer.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Build test_chunked_buffer executable
 $(TEST1_EXEC): $(CHUNKED_OBJ) $(TEST1_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@
@@ -83,13 +90,18 @@ $(SONNET_EXEC): $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(SONNET_OBJ)
 $(PERF_EXEC): $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(PERF_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@
 
+# Build iter_test executable
+$(ITER_EXEC): $(STRING_BUFFER_OBJ) $(ITER_OBJ)
+	$(CC) $(LDFLAGS) $^ -o $@
+
 # Run all tests
-test: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC)
+test: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC)
 	./$(TEST1_EXEC)
 	./$(TEST2_EXEC)
 	./$(INTEGRATION_EXEC)
 	./$(SONNET_EXEC)
 	./$(PERF_EXEC)
+	./$(ITER_EXEC)
 
 # Run specific test
 test1: $(TEST1_EXEC)
@@ -107,10 +119,13 @@ sonnet: $(SONNET_EXEC)
 perf: $(PERF_EXEC)
 	./$(PERF_EXEC)
 
+iter: $(ITER_EXEC)
+	./$(ITER_EXEC)
+
 # Clean up
 clean:
-	rm -f $(CHUNKED_OBJ) $(STRING_BUFFER_OBJ) $(TEST1_OBJ) $(TEST2_OBJ) $(INTEGRATION_OBJ) $(SONNET_OBJ) $(PERF_OBJ)
-	rm -f $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC)
+	rm -f $(CHUNKED_OBJ) $(STRING_BUFFER_OBJ) $(TEST1_OBJ) $(TEST2_OBJ) $(INTEGRATION_OBJ) $(SONNET_OBJ) $(PERF_OBJ) $(ITER_OBJ)
+	rm -f $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC)
 
 # Phony targets
-.PHONY: all test test1 test2 integration sonnet perf clean
+.PHONY: all test test1 test2 integration sonnet perf iter clean
