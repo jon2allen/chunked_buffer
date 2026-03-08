@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "string_buffer.h"
 #include <stdlib.h>
 #include <string.h>
@@ -32,9 +33,20 @@ bool sb_append_len(StringBuffer *sb, const char *text, size_t text_len) {
     return true;
 }
 
-// Append a null-terminated string to a StringBuffer
-bool sb_append(StringBuffer *sb, const char *text) {
-    return sb_append_len(sb, text, strlen(text));
+// Append a string to a StringBuffer with boundary safety
+bool _sb_append_internal(StringBuffer *sb, const char *text, size_t bos) {
+    if (!sb || !text) return false;
+    
+    size_t actual_len;
+    if (bos == (size_t)-1) {
+        // Unknown size (pointer), must trust null terminator
+        actual_len = strlen(text);
+    } else {
+        // Known size (array), use strnlen for safety
+        actual_len = strnlen(text, bos);
+    }
+    
+    return sb_append_len(sb, text, actual_len);
 }
 
 // Append a string with JSON escaping to a StringBuffer

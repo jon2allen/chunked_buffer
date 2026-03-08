@@ -20,7 +20,9 @@ typedef struct {
 // Function declarations
 bool sb_init(StringBuffer *sb, size_t initial_cap);
 bool sb_append_len(StringBuffer *sb, const char *text, size_t text_len);
-bool sb_append(StringBuffer *sb, const char *text);
+bool _sb_append_internal(StringBuffer *sb, const char *text, size_t bos);
+
+#define sb_append(sb, text) _sb_append_internal(sb, (text), __builtin_object_size(text, 0))
 void sb_append_escaped_json(StringBuffer *sb, const char *text, size_t len);
 void sb_free(StringBuffer *sb);
 

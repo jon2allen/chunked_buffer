@@ -16,6 +16,7 @@ INTEGRATION_SRC = integration_test.c
 SONNET_SRC = sonnet_search.c
 PERF_SRC = performance_test.c
 ITER_SRC = iter_test.c
+SECURITY_SRC = test_security_risk.c
 
 # Object files
 CHUNKED_OBJ = $(CHUNKED_BUFFER_DIR)/chunked_buffer.o
@@ -26,6 +27,7 @@ INTEGRATION_OBJ = integration_test.o
 SONNET_OBJ = sonnet_search.o
 PERF_OBJ = performance_test.o
 ITER_OBJ = iter_test.o
+SECURITY_OBJ = test_security_risk.o
 
 # Executables
 TEST1_EXEC = test_chunked_buffer
@@ -34,9 +36,10 @@ INTEGRATION_EXEC = integration_test
 SONNET_EXEC = sonnet_search
 PERF_EXEC = performance_test
 ITER_EXEC = iter_test
+SECURITY_EXEC = test_security_risk
 
 # Default target - build all tests
-all: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC)
+all: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC) $(SECURITY_EXEC)
 
 # Build chunked_buffer.o
 $(CHUNKED_OBJ): $(CHUNKED_SRC) $(CHUNKED_BUFFER_DIR)/chunked_buffer.h
@@ -70,6 +73,10 @@ $(PERF_OBJ): $(PERF_SRC) $(STRING_BUFFER_DIR)/string_buffer.h $(CHUNKED_BUFFER_D
 $(ITER_OBJ): $(ITER_SRC) $(STRING_BUFFER_DIR)/string_buffer.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Build test_security_risk.o
+$(SECURITY_OBJ): $(SECURITY_SRC) $(STRING_BUFFER_DIR)/string_buffer.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Build test_chunked_buffer executable
 $(TEST1_EXEC): $(CHUNKED_OBJ) $(TEST1_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@
@@ -94,6 +101,10 @@ $(PERF_EXEC): $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(PERF_OBJ)
 $(ITER_EXEC): $(STRING_BUFFER_OBJ) $(ITER_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@
 
+# Build test_security_risk executable
+$(SECURITY_EXEC): $(STRING_BUFFER_OBJ) $(SECURITY_OBJ)
+	$(CC) $(LDFLAGS) $^ -o $@
+
 # Run all tests
 test: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC)
 	./$(TEST1_EXEC)
@@ -102,6 +113,7 @@ test: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC
 	./$(SONNET_EXEC)
 	./$(PERF_EXEC)
 	./$(ITER_EXEC)
+	./$(SECURITY_EXEC)
 
 # Run specific test
 test1: $(TEST1_EXEC)
@@ -122,10 +134,13 @@ perf: $(PERF_EXEC)
 iter: $(ITER_EXEC)
 	./$(ITER_EXEC)
 
+security: $(SECURITY_EXEC)
+	./$(SECURITY_EXEC)
+
 # Clean up
 clean:
-	rm -f $(CHUNKED_OBJ) $(STRING_BUFFER_OBJ) $(TEST1_OBJ) $(TEST2_OBJ) $(INTEGRATION_OBJ) $(SONNET_OBJ) $(PERF_OBJ) $(ITER_OBJ)
-	rm -f $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC)
+	rm -f $(CHUNKED_OBJ) $(STRING_BUFFER_OBJ) $(TEST1_OBJ) $(TEST2_OBJ) $(INTEGRATION_OBJ) $(SONNET_OBJ) $(PERF_OBJ) $(ITER_OBJ) $(SECURITY_OBJ)
+	rm -f $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC) $(SECURITY_EXEC)
 
 # Phony targets
-.PHONY: all test test1 test2 integration sonnet perf iter clean
+.PHONY: all test test1 test2 integration sonnet perf iter security clean
