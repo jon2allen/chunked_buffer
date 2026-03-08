@@ -5,7 +5,7 @@ int main() {
     // Create and fill a source buffer
     StringBuffer source_sb;
     sb_init(&source_sb, 128);
-    sb_append(&source_sb, "This is a test of iteration and C language in STringbuf lib");
+    sb_append(&source_sb, "This is a test of iteration and C language in STringbuf lib - Aequeosalinocalcalinoceraceoaluminosocupreovitriolic ");
 
     // Initialize the iterator
     SB_Iterator it;
