@@ -1,7 +1,7 @@
 # Compiler settings
-CC = gcc
-CFLAGS = -Wall -Wextra -Werror -std=c11 -g -I.
-LDFLAGS = 
+CC ?= cc
+CFLAGS += -Wall -Wextra -Werror -std=c11 -g -I.
+LDFLAGS += 
 
 # Library directories
 STRING_BUFFER_DIR = string_buffer_lib
@@ -79,31 +79,31 @@ $(SECURITY_OBJ): $(SECURITY_SRC) $(STRING_BUFFER_DIR)/string_buffer.h
 
 # Build test_chunked_buffer executable
 $(TEST1_EXEC): $(CHUNKED_OBJ) $(TEST1_OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(CHUNKED_OBJ) $(TEST1_OBJ) -o $@
 
 # Build test_string_buffer executable
 $(TEST2_EXEC): $(STRING_BUFFER_OBJ) $(TEST2_OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(STRING_BUFFER_OBJ) $(TEST2_OBJ) -o $@
 
 # Build integration_test executable
 $(INTEGRATION_EXEC): $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(INTEGRATION_OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(INTEGRATION_OBJ) -o $@
 
 # Build sonnet_search executable
 $(SONNET_EXEC): $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(SONNET_OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(SONNET_OBJ) -o $@
 
 # Build performance_test executable
 $(PERF_EXEC): $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(PERF_OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(STRING_BUFFER_OBJ) $(CHUNKED_OBJ) $(PERF_OBJ) -o $@
 
 # Build iter_test executable
 $(ITER_EXEC): $(STRING_BUFFER_OBJ) $(ITER_OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(STRING_BUFFER_OBJ) $(ITER_OBJ) -o $@
 
 # Build test_security_risk executable
 $(SECURITY_EXEC): $(STRING_BUFFER_OBJ) $(SECURITY_OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(STRING_BUFFER_OBJ) $(SECURITY_OBJ) -o $@
 
 # Run all tests
 test: $(TEST1_EXEC) $(TEST2_EXEC) $(INTEGRATION_EXEC) $(SONNET_EXEC) $(PERF_EXEC) $(ITER_EXEC)
